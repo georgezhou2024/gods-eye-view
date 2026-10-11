@@ -512,10 +512,18 @@
       return;
     }
 
-    // 点击地图添加标记
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     
     handler.setInputAction((click) => {
+      // 先检查是不是点到了标记
+      const pickedObject = viewer.scene.pick(click.position);
+      if (Cesium.defined(pickedObject) && pickedObject.id.billboard) {
+        selectedMarker = pickedObject.id;
+        document.getElementById('nav-panel').style.display = 'block';
+        return;
+      }
+
+      // 如果在添加模式，就加标记
       if (!addMode) return;
 
       const cartesian = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
@@ -524,6 +532,16 @@
         const lng = Cesium.Math.toDegrees(cartographic.longitude);
         const lat = Cesium.Math.toDegrees(cartographic.latitude);
         addMarker(lng, lat);
+      } else {
+        // 3D 模式下用 globe.pick
+        const ray = viewer.camera.getPickRay(click.position);
+        const cartesian2 = viewer.scene.globe.pick(ray, viewer.scene);
+        if (cartesian2) {
+          const cartographic = Cesium.Cartographic.fromCartesian(cartesian2);
+          const lng = Cesium.Math.toDegrees(cartographic.longitude);
+          const lat = Cesium.Math.toDegrees(cartographic.latitude);
+          addMarker(lng, lat);
+        }
       }
 
       addMode = false;
@@ -532,15 +550,6 @@
         btn.innerHTML = '📍 添加标记';
         btn.style.background = '#1a1a2e';
         btn.style.color = '#00ff88';
-      }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-    // 点击标记弹出导航
-    handler.setInputAction((click) => {
-      const pickedObject = viewer.scene.pick(click.position);
-      if (Cesium.defined(pickedObject) && pickedObject.id.billboard) {
-        selectedMarker = pickedObject.id;
-        document.getElementById('nav-panel').style.display = 'block';
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
   }
