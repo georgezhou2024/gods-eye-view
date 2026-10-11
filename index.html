@@ -34,6 +34,113 @@
 
   <!-- gev:template hud-loading -->
 
+  <!-- 高德交通浮窗 -->
+  <div id="amap-traffic-widget" style="position:fixed; top:100px; left:20px; z-index:99999; font-family: 'Inter', sans-serif; background:#1a1a2e; padding:10px; border-radius:8px; border:1px solid #00ff88;">
+    <button onclick="
+      var panel = document.getElementById('amap-traffic-panel');
+      var content = document.getElementById('amap-traffic-content');
+      if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        content.innerHTML = '⏳ 加载中...';
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/amap/traffic?rect=116.43,39.90;116.48,39.94', true);
+        xhr.onload = function() {
+          try {
+            var data = JSON.parse(xhr.responseText);
+            if (data.status === '1' && data.trafficinfo) {
+              var eval_ = data.trafficinfo.evaluation;
+              var html = '';
+              if (eval_) {
+                html += '<div style=margin-bottom:8px; padding:6px; background:#222; border-radius:4px;>';
+                html += '<div>📝 ' + (eval_.description || '暂无描述') + '</div>';
+                html += '</div>';
+                html += '<div style=display:flex; gap:8px; margin-bottom:8px;>';
+                html += '<span style=color:#00ff88;>畅通: ' + (eval_.expedite || 0) + '</span>';
+                html += '<span style=color:#ffaa00;>缓行: ' + (eval_.congested || 0) + '</span>';
+                html += '<span style=color:#ff4444;>拥堵: ' + (eval_.blocked || 0) + '</span>';
+                html += '</div>';
+              }
+              if (data.trafficinfo.roads && data.trafficinfo.roads.length > 0) {
+                html += '<div style=margin-top:8px; color:#888;>道路详情:</div>';
+                var statusMap = {'1':'🟢 畅通','2':'🟡 缓行','3':'🔴 拥堵','4':'⚫ 严重拥堵'};
+                for (var i = 0; i < Math.min(10, data.trafficinfo.roads.length); i++) {
+                  var road = data.trafficinfo.roads[i];
+                  var status = statusMap[road.status] || road.status;
+                  html += '<div style=padding:2px 0; border-bottom:1px solid #333;>' + status + ' ' + road.name + '</div>';
+                }
+              }
+              content.innerHTML = html;
+            } else {
+              content.innerHTML = '❌ 查询失败: ' + (data.info || '未知错误');
+            }
+          } catch (e) {
+            content.innerHTML = '❌ 解析错误: ' + e.message;
+          }
+        };
+        xhr.onerror = function() {
+          content.innerHTML = '❌ 网络错误';
+        };
+        xhr.send();
+      } else {
+        panel.style.display = 'none';
+      }
+    " style="background:#1a1a2e; color:#00ff88; border:1px solid #00ff88; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px; font-family:'JetBrains Mono', monospace;">
+      🚗 北京路况
+    </button>
+    <div id="amap-traffic-panel" style="display:block; margin-top:8px; background:#1a1a2e; color:#e0e0e0; border:1px solid #333; border-radius:8px; padding:12px; width:320px; max-height:400px; overflow-y:auto; font-size:12px; line-height:1.6;">
+      <div style="color:#00ff88; font-weight:600; margin-bottom:8px;">📊 高德实时交通</div>
+      <div id="amap-traffic-content">点击按钮查询...</div>
+    </div>
+  </div>
+  <script>
+    // 页面加载完自动加载高德交通数据
+    window.onload = function() {
+      var content = document.getElementById('amap-traffic-content');
+      if (!content) return;
+      content.innerHTML = '⏳ 加载中...';
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/api/amap/traffic?rect=116.43,39.90;116.48,39.94', true);
+      xhr.onload = function() {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          if (data.status === '1' && data.trafficinfo) {
+            var eval_ = data.trafficinfo.evaluation;
+            var html = '';
+            if (eval_) {
+              html += '<div style="margin-bottom:8px; padding:6px; background:#222; border-radius:4px;">';
+              html += '<div>📝 ' + (eval_.description || '暂无描述') + '</div>';
+              html += '</div>';
+              html += '<div style="display:flex; gap:8px; margin-bottom:8px;">';
+              html += '<span style="color:#00ff88;">畅通: ' + (eval_.expedite || 0) + '</span>';
+              html += '<span style="color:#ffaa00;">缓行: ' + (eval_.congested || 0) + '</span>';
+              html += '<span style="color:#ff4444;">拥堵: ' + (eval_.blocked || 0) + '</span>';
+              html += '</div>';
+            }
+            if (data.trafficinfo.roads && data.trafficinfo.roads.length > 0) {
+              html += '<div style="margin-top:8px; color:#888;">道路详情:</div>';
+              var statusMap = {'1':'🟢 畅通','2':'🟡 缓行','3':'🔴 拥堵','4':'⚫ 严重拥堵'};
+              for (var i = 0; i < Math.min(10, data.trafficinfo.roads.length); i++) {
+                var road = data.trafficinfo.roads[i];
+                var status = statusMap[road.status] || road.status;
+                html += '<div style="padding:2px 0; border-bottom:1px solid #333;">' + status + ' ' + road.name + '</div>';
+              }
+            }
+            content.innerHTML = html;
+          } else {
+            content.innerHTML = '❌ 查询失败: ' + (data.info || '未知错误');
+          }
+        } catch (e) {
+          content.innerHTML = '❌ 解析错误: ' + e.message;
+        }
+      };
+      xhr.onerror = function() {
+        content.innerHTML = '❌ 网络错误';
+      };
+      xhr.send();
+    };
+  </script>
+
+  <script src="/amap-traffic.js"></script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import {
+﻿import {
   cableClassificationTypeForScene,
   cableClassificationTypeForStack,
 } from './surface.js';
@@ -6,7 +6,7 @@ import {
 export function createLifecycle({ state, parts, source, mapStackEventTarget }) {
   return {
     id: 'telegeography-submarine-cables',
-    name: 'Submarine Cables',
+    name: '海底电缆',
     icon: '≋',
     source: source.label,
     updateInterval: 0,

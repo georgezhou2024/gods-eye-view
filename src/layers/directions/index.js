@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module layers/directions
  * @description Keyless A→B directions on the globe: drive, walk or cycle.
  *
@@ -1242,7 +1242,7 @@ export function createDirectionsLayer({ services, source }) {
 
   const directionsLayer = {
     id: 'directions',
-    name: 'Directions',
+    name: '路线',
     icon: '🧭',
     source: 'OSM routing',
     updateInterval: 0,

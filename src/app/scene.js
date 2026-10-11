@@ -52,6 +52,9 @@ export async function createApplicationScene({
     container: 'cesiumContainer',
     creditContainer,
   });
+  // 暴露到全局，供外部脚本访问
+  window.viewer = viewer;
+  window.Cesium = Cesium;
   defer(() => {
     uninstallRenderGovernor(viewer);
     if (!viewer.isDestroyed()) viewer.destroy();

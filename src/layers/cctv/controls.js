@@ -1,4 +1,4 @@
-import {
+﻿import {
   DEFAULT_UPDATE_INTERVAL_MS,
   MIN_AUTO_HOP_SEC,
   MAX_AUTO_HOP_SEC,
@@ -13,7 +13,7 @@ export function createControls({ state: layerState, services, parts, source }) {
   const methods = {
     id: 'cctv',
 
-    name: 'CCTV',
+    name: '监控摄像头',
 
     icon: '📹',
 

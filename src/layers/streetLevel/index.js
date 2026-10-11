@@ -1,4 +1,4 @@
-import { createState } from './state.js';
+﻿import { createState } from './state.js';
 import { createMarker } from './marker.js';
 import { createCameraFollow } from './cameraFollow.js';
 import { createCredits } from './credits.js';
@@ -325,7 +325,7 @@ export function createStreetLevelLayer({
 
   const layer = {
     id: STREET_LEVEL_LAYER_ID,
-    name: 'Street Level',
+    name: '街景',
     icon: '📷',
     source: definitionsFrozen.map((def) => def.name).join(' · '),
     updateInterval: 0,

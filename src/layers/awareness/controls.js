@@ -1,4 +1,4 @@
-import { AWARENESS_RADIUS_M } from '../../data/militaryAwarenessEngine.js';
+﻿import { AWARENESS_RADIUS_M } from '../../data/militaryAwarenessEngine.js';
 
 export function createControls({ state: layerState, services, parts, source }) {
   const flightsLayer = services.flights;
@@ -8,7 +8,7 @@ export function createControls({ state: layerState, services, parts, source }) {
   const methods = {
     id: 'military-awareness',
 
-    name: 'Global Context',
+    name: '全局上下文',
 
     icon: '◎',
 

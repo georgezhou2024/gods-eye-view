@@ -1,4 +1,4 @@
-import * as Cesium from 'cesium';
+﻿import * as Cesium from 'cesium';
 import {
   EARTHQUAKE_OVERLAY_SOURCE_ID,
   EARTHQUAKE_OVERLAY_COHORT_LIMIT,
@@ -26,7 +26,7 @@ export function createEarthquakesLayer({ source, overlayHost } = {}) {
 
   const layer = {
     id: 'earthquakes',
-    name: 'Earthquakes (24h)',
+    name: '地震（24小时）',
     icon: '🌋',
     source: 'USGS',
     updateInterval: 60000,

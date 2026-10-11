@@ -1,4 +1,4 @@
-import { resolveCatalogSources } from './sourceComposition.js';
+﻿import { resolveCatalogSources } from './sourceComposition.js';
 import { createWeatherClock } from '../layers/weather/clock.js';
 import { createWeatherLayer } from '../layers/weather/index.js';
 import { createCyclonesLayer } from '../layers/cyclones/index.js';
@@ -165,7 +165,7 @@ export function createApplicationCatalog({
         createApplicationFirms({
           surface,
           id: 'local-firms',
-          name: 'FIRMS Active Fires',
+          name: 'FIRMS 活跃火灾',
           icon: '▲',
           source: 'NASA FIRMS · LIVE',
           feed: sources.firms,

@@ -1,4 +1,4 @@
-import { displayedKinematics } from '../../data/motionModel.js';
+﻿import { displayedKinematics } from '../../data/motionModel.js';
 import * as Cesium from 'cesium';
 import { isExplicitLayerStateOrigin } from '../../data/layerState.js';
 import { aircraftIncludedInNearby } from '../../data/aircraftNearbyPolicy.js';
@@ -196,7 +196,7 @@ export function createQueries({
 
     id: 'military',
 
-    name: 'Military Flights',
+    name: '军用航班',
 
     icon: '🎖️',
 

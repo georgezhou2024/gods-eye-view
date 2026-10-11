@@ -4,9 +4,9 @@
     <div class="panel-glow"></div>
     <div class="data-panel-inner">
       <div class="panel-header">
-        <span class="panel-title">DATA LAYERS</span>
+        <span class="panel-title">数据图层</span>
         <span class="panel-divider"></span>
-        <button class="panel-collapse-btn" data-collapse-target="data-panel" title="Collapse panel">+</button>
+        <button class="panel-collapse-btn" data-collapse-target="data-panel" title="收起面板">+</button>
       </div>
       <div id="data-toggles" class="data-toggle-list"></div>
     </div>
@@ -17,56 +17,56 @@
     <div class="panel-glow"></div>
     <div class="cctv-panel-inner" data-rail-scroller>
       <div class="panel-header">
-        <span class="panel-title">CCTV</span>
+        <span class="panel-title">监控摄像头</span>
         <span class="panel-divider"></span>
-        <button class="panel-collapse-btn" data-collapse-target="cctv-panel" title="Collapse panel">+</button>
+        <button class="panel-collapse-btn" data-collapse-target="cctv-panel" title="收起面板">+</button>
       </div>
       <div class="cyber-panel-body" data-rail-scroller>
       <div id="cctv-frame-wrap" class="cctv-frame-wrap">
         <img id="cctv-frame" alt="CCTV feed frame" />
         <canvas id="cctv-video" class="cctv-frame" hidden></canvas>
       </div>
-      <div id="cctv-source-badge" role="status" aria-live="polite">SOURCE · UNKNOWN</div>
-      <div id="cctv-meta">Enable CCTV to load camera intersections</div>
+      <div id="cctv-source-badge" role="status" aria-live="polite">来源 · 未知</div>
+      <div id="cctv-meta">启用监控摄像头以加载摄像头位置</div>
       <div class="cctv-controls">
-        <button id="cctv-enable-btn" class="scene-btn">CCTV OFF</button>
-        <button id="cctv-nearest-btn" class="scene-btn">NEAREST</button>
+        <button id="cctv-enable-btn" class="scene-btn">摄像头 关</button>
+        <button id="cctv-nearest-btn" class="scene-btn">最近</button>
       </div>
       <div class="cctv-controls">
-        <button id="cctv-prev-btn" class="scene-btn">PREV</button>
-        <select id="cctv-camera-select" aria-label="CCTV camera"></select>
-        <button id="cctv-next-btn" class="scene-btn">NEXT</button>
+        <button id="cctv-prev-btn" class="scene-btn">上一个</button>
+        <select id="cctv-camera-select" aria-label="监控摄像头"></select>
+        <button id="cctv-next-btn" class="scene-btn">下一个</button>
       </div>
       <div class="cctv-controls">
-        <button id="cctv-focus-btn" class="scene-btn">FOCUS</button>
-        <button id="cctv-coverage-btn" class="scene-btn">COVERAGE OFF</button>
-        <button id="cctv-auto-hop-btn" class="scene-btn">AUTO HOP OFF</button>
+        <button id="cctv-focus-btn" class="scene-btn">聚焦</button>
+        <button id="cctv-coverage-btn" class="scene-btn">覆盖范围 关</button>
+        <button id="cctv-auto-hop-btn" class="scene-btn">自动切换 关</button>
       </div>
       <div class="cctv-controls">
-        <button id="cctv-projection-btn" class="scene-btn">PROJECTION ON</button>
-        <span id="cctv-quality-chip">CAL · --</span>
+        <button id="cctv-projection-btn" class="scene-btn">投影 开</button>
+        <span id="cctv-quality-chip">校准 · --</span>
       </div>
       <div class="cctv-calibration-block">
         <div class="cctv-calibration-header">
-          <div class="cctv-summary-label">CALIBRATION</div>
-          <button id="cctv-adjust-btn" class="scene-btn" title="Drag the camera in the world: rings rotate, arrows move, handles set range/FOV">ADJUST</button>
+          <div class="cctv-summary-label">校准</div>
+          <button id="cctv-adjust-btn" class="scene-btn" title="在世界中拖动摄像头：圆环旋转、箭头移动、手柄设置范围/视场角">调整</button>
         </div>
-        <div id="cctv-cal-readout" class="cctv-cal-readout" aria-label="Camera pose — click a value to type">
-          <button class="cctv-cal-value" data-cal-field="heading" title="Heading (compass °) — click to type">HDG --</button>
-          <button class="cctv-cal-value" data-cal-field="pitch" title="Pitch (° up/down) — click to type">PITCH --</button>
-          <button class="cctv-cal-value" data-cal-field="fov" title="Horizontal FOV (°) — click to type">FOV --</button>
-          <button class="cctv-cal-value" data-cal-field="range" title="Range / monitor-plane distance (m) — click to type">RANGE --</button>
-          <button class="cctv-cal-value" data-cal-field="height" title="Mount height above ground (m) — click to type">HGT --</button>
-          <button class="cctv-cal-value" data-cal-field="north" title="North offset from catalog position (m) — click to type">ΔN --</button>
-          <button class="cctv-cal-value" data-cal-field="east" title="East offset from catalog position (m) — click to type">ΔE --</button>
+        <div id="cctv-cal-readout" class="cctv-cal-readout" aria-label="摄像头姿态 — 点击数值可输入">
+          <button class="cctv-cal-value" data-cal-field="heading" title="航向角（罗盘°）— 点击输入">航向 --</button>
+          <button class="cctv-cal-value" data-cal-field="pitch" title="俯仰角（° 上/下）— 点击输入">俯仰 --</button>
+          <button class="cctv-cal-value" data-cal-field="fov" title="水平视场角（°）— 点击输入">视场角 --</button>
+          <button class="cctv-cal-value" data-cal-field="range" title="范围 / 监控平面距离（米）— 点击输入">范围 --</button>
+          <button class="cctv-cal-value" data-cal-field="height" title="安装高度（距地 米）— 点击输入">高度 --</button>
+          <button class="cctv-cal-value" data-cal-field="north" title="相对目录位置北偏移（米）— 点击输入">北偏 --</button>
+          <button class="cctv-cal-value" data-cal-field="east" title="相对目录位置东偏移（米）— 点击输入">东偏 --</button>
         </div>
         <div class="cctv-controls cctv-calibration-actions">
-          <button id="cctv-calib-save-btn" class="scene-btn">SAVE CAL</button>
-          <button id="cctv-calib-reset-btn" class="scene-btn">RESET CAL</button>
+          <button id="cctv-calib-save-btn" class="scene-btn">保存校准</button>
+          <button id="cctv-calib-reset-btn" class="scene-btn">重置校准</button>
         </div>
       </div>
-      <div class="cctv-summary-label">SCENE SUMMARY</div>
-      <div id="cctv-summary">Enable CCTV to start camera-linked intelligence summaries.</div>
+      <div class="cctv-summary-label">场景摘要</div>
+      <div id="cctv-summary">启用监控摄像头以开始摄像头关联的情报摘要。</div>
       </div>
     </div>
   </div>
@@ -76,22 +76,22 @@
     <div class="panel-glow"></div>
     <div class="street-level-panel-inner" data-rail-scroller>
       <div class="panel-header">
-        <span class="panel-title">STREET LEVEL</span>
+        <span class="panel-title">街景</span>
         <span class="panel-divider"></span>
-        <button id="sl-status" class="sl-status" type="button" aria-pressed="false" title="Turn Street Level on or off">OFF</button>
-        <button class="panel-collapse-btn" data-collapse-target="street-level-panel" title="Expand panel">◀</button>
+        <button id="sl-status" class="sl-status" type="button" aria-pressed="false" title="开关街景">关</button>
+        <button class="panel-collapse-btn" data-collapse-target="street-level-panel" title="展开面板">◀</button>
       </div>
       <div id="sl-body" class="sl-body">
         <div class="sl-main">
           <div id="sl-viewer-wrap" class="sl-viewer-wrap" hidden>
             <div class="sl-viewer-bar">
               <div class="sl-viewer-tools">
-                <button id="sl-viewer-expand" class="scene-btn" type="button" aria-pressed="false" title="Expand the street-level view (Esc shrinks it)"><span class="sl-btn-icon" aria-hidden="true">⤢</span><span class="sl-btn-text">EXPAND</span></button>
-                <div class="sl-seg" role="radiogroup" aria-label="Image fit">
-                  <button type="button" class="sl-seg-btn is-active" data-sl-render="letterbox" role="radio" aria-checked="true" title="Fit: show the whole photo, with dark bars where its shape differs from the frame">FIT</button>
-                  <button type="button" class="sl-seg-btn" data-sl-render="fill" role="radio" aria-checked="false" tabindex="-1" title="Fill: fill the frame edge to edge, cropping the photo">FILL</button>
+                <button id="sl-viewer-expand" class="scene-btn" type="button" aria-pressed="false" title="展开街景视图（Esc 缩小）"><span class="sl-btn-icon" aria-hidden="true">⤢</span><span class="sl-btn-text">展开</span></button>
+                <div class="sl-seg" role="radiogroup" aria-label="图片适配">
+                  <button type="button" class="sl-seg-btn is-active" data-sl-render="letterbox" role="radio" aria-checked="true" title="适配：显示整张照片，形状不同处留黑边">适应</button>
+                  <button type="button" class="sl-seg-btn" data-sl-render="fill" role="radio" aria-checked="false" tabindex="-1" title="填充：铺满整个画面，裁剪照片">填充</button>
                 </div>
-                <button id="sl-follow-btn" class="scene-btn" type="button" aria-pressed="false" aria-label="Camera follows view" title="Camera follows view: move the globe camera wherever the street-level view looks"><span class="sl-btn-icon" aria-hidden="true">⌖</span><span class="sl-btn-text">FOLLOW</span></button>
+                <button id="sl-follow-btn" class="scene-btn" type="button" aria-pressed="false" aria-label="摄像头跟随视角" title="摄像头跟随视角：地球摄像头跟随街景视角移动"><span class="sl-btn-icon" aria-hidden="true">⌖</span><span class="sl-btn-text">跟随</span></button>
               </div>
               <div class="sl-viewer-tools sl-viewer-tools-right">
                 <button id="sl-viewer-close" class="sl-viewer-x" type="button" title="Close the image and deselect it on the map" aria-label="Close the street-level image">×</button>
@@ -111,7 +111,7 @@
           </div>
           <div class="sl-settings">
             <div class="sl-providers" role="group" aria-label="Imagery providers">
-              <span class="cctv-summary-label">PROVIDERS</span>
+              <span class="cctv-summary-label">图源</span>
               <div id="sl-provider-chips" class="sl-chips"></div>
             </div>
             <div id="sl-error" class="sl-error" role="alert" hidden><span aria-hidden="true">⚠</span> <span id="sl-error-text"></span></div>
@@ -119,17 +119,17 @@
                  focusable so their tooltip can say how to add the key. -->
             <fieldset id="sl-controls" class="sl-controls">
               <div class="sl-filters" role="group" aria-label="Imagery filters">
-                <span class="cctv-summary-label">IMAGERY</span>
-                <div class="sl-seg" role="radiogroup" aria-label="Panorama filter">
-                  <button type="button" class="sl-seg-btn is-active" data-sl-pano="all" role="radio" aria-checked="true">ALL</button>
+                <span class="cctv-summary-label">影像</span>
+                <div class="sl-seg" role="radiogroup" aria-label="全景图筛选">
+                  <button type="button" class="sl-seg-btn is-active" data-sl-pano="all" role="radio" aria-checked="true">全部</button>
                   <button type="button" class="sl-seg-btn" data-sl-pano="pano" role="radio" aria-checked="false" tabindex="-1">360°</button>
-                  <button type="button" class="sl-seg-btn" data-sl-pano="flat" role="radio" aria-checked="false" tabindex="-1">FLAT</button>
+                  <button type="button" class="sl-seg-btn" data-sl-pano="flat" role="radio" aria-checked="false" tabindex="-1">平面</button>
                 </div>
               </div>
               <div class="sl-since">
-                <label class="cctv-summary-label" for="sl-since">SINCE</label>
-                <input id="sl-since" class="sl-range" type="range" min="0" max="8" step="1" value="0" aria-valuetext="ANY DATE" aria-describedby="sl-since-label" />
-                <output id="sl-since-label" class="sl-since-label" for="sl-since">ANY DATE</output>
+                <label class="cctv-summary-label" for="sl-since">时间</label>
+                <input id="sl-since" class="sl-range" type="range" min="0" max="8" step="1" value="0" aria-valuetext="任意日期" aria-describedby="sl-since-label" />
+                <output id="sl-since-label" class="sl-since-label" for="sl-since">任意日期</output>
               </div>
             </fieldset>
             <ul id="sl-legend" class="sl-legend" aria-label="Coverage colours"></ul>
@@ -145,35 +145,35 @@
     <div class="panel-glow"></div>
     <div class="scene-panel-inner">
       <div class="panel-header">
-        <span class="panel-title">SCENES</span>
+        <span class="panel-title">场景</span>
         <span class="panel-divider"></span>
-        <button class="panel-collapse-btn" data-collapse-target="scene-panel" title="Collapse panel">+</button>
+        <button class="panel-collapse-btn" data-collapse-target="scene-panel" title="收起面板">+</button>
       </div>
       <div class="scene-controls">
-        <select id="scene-select" aria-label="Scene recipe"></select>
-        <button id="scene-new-btn" class="scene-btn">NEW</button>
-        <button id="scene-delete-btn" class="scene-btn scene-btn-danger">DEL</button>
+        <select id="scene-select" aria-label="场景预设"></select>
+        <button id="scene-new-btn" class="scene-btn">新建</button>
+        <button id="scene-delete-btn" class="scene-btn scene-btn-danger">删除</button>
       </div>
       <div class="scene-controls">
-        <button id="scene-capture-btn" class="scene-btn">CAPTURE SHOT</button>
-        <button id="scene-update-shot-btn" class="scene-btn">UPDATE SHOT</button>
+        <button id="scene-capture-btn" class="scene-btn">截取画面</button>
+        <button id="scene-update-shot-btn" class="scene-btn">更新画面</button>
       </div>
       <div id="scene-shot-list" class="scene-shot-list"></div>
       <div class="scene-controls">
-        <button id="scene-start-btn" class="scene-btn">START</button>
-        <button id="scene-stop-btn" class="scene-btn scene-btn-danger">STOP</button>
-        <button id="scene-next-btn" class="scene-btn">NEXT</button>
+        <button id="scene-start-btn" class="scene-btn">开始</button>
+        <button id="scene-stop-btn" class="scene-btn scene-btn-danger">停止</button>
+        <button id="scene-next-btn" class="scene-btn">下一个</button>
       </div>
       <div class="scene-controls">
-        <button id="scene-export-btn" class="scene-btn">EXPORT PRESETS</button>
-        <button id="scene-import-btn" class="scene-btn">IMPORT</button>
-        <button id="scene-download-btn" class="scene-btn">RUN LOG</button>
+        <button id="scene-export-btn" class="scene-btn">导出预设</button>
+        <button id="scene-import-btn" class="scene-btn">导入</button>
+        <button id="scene-download-btn" class="scene-btn">运行日志</button>
         <input type="file" id="scene-import-file" accept="application/json,.json" hidden />
       </div>
       <div class="scene-progress">
         <div id="scene-progress-fill">0%</div>
       </div>
-      <div id="scene-status">Ready</div>
+      <div id="scene-status">就绪</div>
     </div>
   </div>
 

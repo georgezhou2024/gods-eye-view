@@ -1,4 +1,4 @@
-import { createLocalGeoJsonLayer } from './localGeojsonCore.js';
+﻿import { createLocalGeoJsonLayer } from './localGeojsonCore.js';
 import { INFRASTRUCTURE_DATA_URLS } from '../sources/infrastructureData.js';
 
 /**
@@ -13,7 +13,7 @@ export function createInfrastructureLayers(services) {
     {
       id: 'local-datacenters',
       url: datacentersUrl,
-      name: 'Datacenters',
+      name: '数据中心',
       color: '#00ffff', // Cyan
       icon: '▣',
       source: 'Local',
@@ -29,7 +29,7 @@ export function createInfrastructureLayers(services) {
     {
       id: 'local-dams',
       url: damsUrl,
-      name: 'Dams',
+      name: '水坝',
       color: '#0088ff', // Blue
       icon: '▰',
       source: 'USACE',

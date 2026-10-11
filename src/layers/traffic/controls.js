@@ -1,4 +1,4 @@
-import {
+﻿import {
   normalizeRoadMode,
   resolveRoadMode,
   TRAFFIC_ROAD_MODES,
@@ -42,7 +42,7 @@ export function createControls({ state: layerState, services, parts, source }) {
   const methods = {
     id: 'traffic',
 
-    name: 'Street Traffic',
+    name: '道路交通',
 
     icon: '🚗',
 

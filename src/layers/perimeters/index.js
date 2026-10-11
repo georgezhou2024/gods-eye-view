@@ -1,4 +1,4 @@
-import * as Cesium from 'cesium';
+﻿import * as Cesium from 'cesium';
 import {
   PERIMETER_OVERLAY_SOURCE_ID,
   perimeterAnchorDegrees,
@@ -244,7 +244,7 @@ export function createFirePerimetersLayer({
 
   const layer = {
     id: 'fire-perimeters',
-    name: 'Fire Perimeters',
+    name: '火灾边界',
     icon: '🔥',
     source: 'NIFC WFIGS',
     updateInterval: 300000,

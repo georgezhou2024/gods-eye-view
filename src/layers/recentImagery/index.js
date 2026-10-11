@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Recent Imagery layer: pick a box, list the last 30 days of HLS (Sentinel-2 /
  * Landsat) and VIIRS imagery that touch it, and drape the days the operator
  * pins. No polling — work happens when the box changes. Rendering, thumbnails
@@ -789,7 +789,7 @@ export function createRecentImageryLayer({
 
   const layer = {
     id: 'recent-imagery',
-    name: 'Recent Imagery',
+    name: '最新影像',
     icon: '🛰',
     source: 'NASA GIBS · HLS + VIIRS',
     updateInterval: 0,

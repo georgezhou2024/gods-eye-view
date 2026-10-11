@@ -1,4 +1,4 @@
-import { isUnavailableCapability } from '../../sources/capability.js';
+﻿import { isUnavailableCapability } from '../../sources/capability.js';
 import * as Cesium from 'cesium';
 import {
   LAYER_ID,
@@ -291,7 +291,7 @@ export function createAlprCamerasLayer({ source, services } = {}) {
 
   const alprCamerasLayer = {
     id: LAYER_ID,
-    name: 'ALPR Cameras',
+    name: '车牌识别摄像头',
     icon: '📷',
     source: source.label || 'Mapped camera locations',
     updateInterval: 0,

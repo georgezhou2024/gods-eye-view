@@ -1,4 +1,4 @@
-import * as Cesium from 'cesium';
+﻿import * as Cesium from 'cesium';
 import { createWindRendering } from './rendering.js';
 import { WIND_FIELDS } from './fields.js';
 import {
@@ -86,7 +86,7 @@ export function createWindLayer({
   const unsubscribeClock = clock?.subscribe(notify);
   const layer = {
     id: 'wind',
-    name: 'Wind',
+    name: '风场',
     icon: '🌬',
     source: 'GFS / ECMWF IFS · FORECAST',
     updateInterval: 3600_000,

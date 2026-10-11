@@ -1,4 +1,4 @@
-import { approxDistanceKm as _approxDistanceKm } from './recordPolicy.js';
+﻿import { approxDistanceKm as _approxDistanceKm } from './recordPolicy.js';
 import { displayedKinematics } from '../../data/motionModel.js';
 import * as Cesium from 'cesium';
 import { isExplicitLayerStateOrigin } from '../../data/layerState.js';
@@ -262,7 +262,7 @@ export function createQueries({
 
     id: 'flights',
 
-    name: 'Live Flights',
+    name: '实时航班',
 
     icon: '✈️',
 

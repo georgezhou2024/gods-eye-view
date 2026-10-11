@@ -1,4 +1,4 @@
-import * as Cesium from 'cesium';
+﻿import * as Cesium from 'cesium';
 import { hitTestWorldOverlay } from '../../overlays/worldOverlay.js';
 import { VESSEL_OVERLAY_SOURCE_ID } from '../../data/vesselLabels.js';
 import { isPointerFree } from '../../data/inputOwnership.js';
@@ -169,7 +169,7 @@ export function createCyclonesLayer({
   }
   const layer = {
     id: 'weather-cyclones',
-    name: 'Cyclone advisories',
+    name: '气旋预警',
     icon: '◉',
     source: 'NOAA NHC / CPHC',
     updateInterval: 300_000,

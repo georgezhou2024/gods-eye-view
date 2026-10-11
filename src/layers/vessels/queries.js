@@ -1,4 +1,4 @@
-import * as Cesium from 'cesium';
+﻿import * as Cesium from 'cesium';
 import {
   AIS_DEGRADED_STATUSES,
   AIS_HEALTHY_STATUSES,
@@ -241,7 +241,7 @@ export function createQueries({
 
     id: 'ais-live-vessels',
 
-    name: 'Live AIS Vessels',
+    name: '实时船只',
 
     icon: '◭',
 

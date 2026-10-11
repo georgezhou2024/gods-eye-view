@@ -1,8 +1,8 @@
-export function createControls({ state: layerState, services, parts, source }) {
+﻿export function createControls({ state: layerState, services, parts, source }) {
   const methods = {
     id: 'radio',
 
-    name: 'Radio',
+    name: '收音机',
 
     icon: '◉',
 
