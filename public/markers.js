@@ -535,22 +535,21 @@
     // 沿着路线移动
     let index = 0;
     const moveInterval = setInterval(() => {
-      if (index >= allPoints.length) {
+      if (index >= allPoints.length - 1) {
         clearInterval(moveInterval);
+        document.getElementById('nav-result').innerHTML += 
+          `<div style="color:#00ff88; margin-top:5px;">✅ 已到达终点</div>`;
         return;
       }
+      index += 1;
       navCar.position = allPoints[index];
-      index += 1; // 慢一点
       
-      // 显示当前位置
-      const carto = Cesium.Cartographic.fromCartesian(allPoints[index]);
-      const lng = Cesium.Math.toDegrees(carto.longitude).toFixed(4);
-      const lat = Cesium.Math.toDegrees(carto.latitude).toFixed(4);
+      // 显示进度
+      const progress = Math.round(index / allPoints.length * 100);
       document.getElementById('nav-result').innerHTML = 
         `<div style="color:#00ff88; margin-top:10px;">🚗 正在导航...</div>
-         <div style="margin-top:5px;">📍 当前位置：${lng}, ${lat}</div>
-         <div style="margin-top:5px; color:#666;">进度：${Math.round(index/allPoints.length*100)}%</div>`;
-    }, 1000); // 1秒走一步，慢10倍
+         <div style="margin-top:5px;">📊 进度：${progress}%</div>`;
+    }, 500); // 0.5秒走一步
   }
 
   // 画路线
