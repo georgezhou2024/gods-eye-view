@@ -1,6 +1,7 @@
 // 标记功能：点击地图添加标记，显示地址和照片
+// + 搜索功能
 // + 快捷城市按钮（北京、上海）
-// + 右上角面板收缩
+// + 标记文字复制
 
 (function() {
   console.log('[Markers] 功能加载中...');
@@ -10,7 +11,107 @@
 
   // 创建 UI
   function createUI() {
-    // 1. 添加标记按钮（右下角）
+    // 1. 搜索框
+    const searchBox = document.createElement('div');
+    searchBox.id = 'search-box';
+    searchBox.style.cssText = `
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 99999;
+      display: flex;
+      gap: 8px;
+      font-family: 'Inter', sans-serif;
+    `;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = '🔍 搜索地名，如：上海新天地';
+    input.style.cssText = `
+      background: #1a1a2e;
+      color: #00ff88;
+      border: 1px solid #00ff88;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 14px;
+      width: 280px;
+      outline: none;
+    `;
+    searchBox.appendChild(input);
+
+    const searchBtn = document.createElement('button');
+    searchBtn.innerHTML = '搜索';
+    searchBtn.style.cssText = `
+      background: #00ff88;
+      color: #1a1a2e;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: bold;
+    `;
+    searchBox.appendChild(searchBtn);
+
+    document.body.appendChild(searchBox);
+
+    // 搜索事件
+    searchBtn.addEventListener('click', () => searchPlace(input.value));
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') searchPlace(input.value);
+    });
+
+    // 2. 快捷城市按钮
+    const cityBar = document.createElement('div');
+    cityBar.id = 'quick-cities';
+    cityBar.style.cssText = `
+      position: fixed;
+      top: 130px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 99999;
+      display: flex;
+      gap: 10px;
+      font-family: 'Inter', sans-serif;
+    `;
+    
+    const cities = [
+      { name: '北京', lng: 116.4074, lat: 39.9042 },
+      { name: '上海', lng: 121.4737, lat: 31.2304 },
+    ];
+
+    cities.forEach(city => {
+      const btn = document.createElement('button');
+      btn.innerHTML = `📍 ${city.name}`;
+      btn.style.cssText = `
+        background: #1a1a2e;
+        color: #00ff88;
+        border: 1px solid #00ff88;
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 12px;
+        cursor: pointer;
+      `;
+      btn.addEventListener('click', () => {
+        const viewer = window.viewer;
+        if (!viewer) return;
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(city.lng, city.lat, 600),
+          orientation: {
+            heading: Cesium.Math.toRadians(0),
+            pitch: Cesium.Math.toRadians(-35),
+            roll: 0.0,
+          },
+          duration: 2.0,
+        });
+      });
+      cityBar.appendChild(btn);
+    });
+
+    document.body.appendChild(cityBar);
+
+    // 3. 添加标记按钮
     const btn = document.createElement('button');
     btn.id = 'add-marker-btn';
     btn.innerHTML = '📍 添加标记';
@@ -45,7 +146,7 @@
       }
     });
 
-    // 2. 清除所有标记按钮
+    // 4. 清除所有标记按钮
     const clearBtn = document.createElement('button');
     clearBtn.id = 'clear-markers-btn';
     clearBtn.innerHTML = '🗑️ 清除标记';
@@ -71,46 +172,33 @@
       if (!viewer) return;
       markers.forEach(m => viewer.entities.remove(m));
       markers = [];
-      console.log('[Markers] 已清除所有标记');
     });
+  }
 
-    // 3. 快捷城市按钮（北京、上海）
-    const cityBar = document.createElement('div');
-    cityBar.id = 'quick-cities';
-    cityBar.style.cssText = `
-      position: fixed;
-      top: 120px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 99999;
-      display: flex;
-      gap: 10px;
-      font-family: 'Inter', sans-serif;
-    `;
+  // 搜索地名
+  async function searchPlace(keyword) {
+    if (!keyword || !window.viewer) return;
+
+    console.log('[Search] 搜索:', keyword);
     
-    const cities = [
-      { name: '北京', lng: 116.4074, lat: 39.9042 },
-      { name: '上海', lng: 121.4737, lat: 31.2304 },
-    ];
+    try {
+      // 高德地理编码 API
+      const url = `/api/amap-geocode?address=${encodeURIComponent(keyword)}`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      console.log('[Search] 结果:', data);
 
-    cities.forEach(city => {
-      const btn = document.createElement('button');
-      btn.innerHTML = `📍 ${city.name}`;
-      btn.style.cssText = `
-        background: #1a1a2e;
-        color: #00ff88;
-        border: 1px solid #00ff88;
-        border-radius: 20px;
-        padding: 8px 16px;
-        font-size: 13px;
-        cursor: pointer;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-      `;
-      btn.addEventListener('click', () => {
-        const viewer = window.viewer;
-        if (!viewer) return;
-        viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(city.lng, city.lat, 600),
+      if (data.status === '1' && data.geocodes && data.geocodes.length > 0) {
+        const location = data.geocodes[0].location.split(',');
+        const lng = parseFloat(location[0]);
+        const lat = parseFloat(location[1]);
+
+        // GCJ02 转 WGS84
+        const wgs = gcj02ToWgs84(lng, lat);
+
+        // 飞过去
+        window.viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(wgs.lng, wgs.lat, 600),
           orientation: {
             heading: Cesium.Math.toRadians(0),
             pitch: Cesium.Math.toRadians(-35),
@@ -118,27 +206,28 @@
           },
           duration: 2.0,
         });
-      });
-      cityBar.appendChild(btn);
-    });
 
-    document.body.appendChild(cityBar);
+        alert(`已找到: ${data.geocodes[0].formatted_address}`);
+      } else {
+        alert('未找到该地点');
+      }
+    } catch (e) {
+      console.error('[Search] 搜索失败:', e);
+      alert('搜索失败: ' + e.message);
+    }
   }
 
   // 获取地址（反向地理编码）
   async function getAddress(lng, lat) {
     try {
-      console.log('[Markers] 查询地址:', lng, lat);
       const url = `/api/amap-geocode?location=${lng},${lat}`;
       const resp = await fetch(url);
       const data = await resp.json();
-      console.log('[Markers] 地址结果:', data);
       if (data.status === '1' && data.regeocode) {
         return data.regeocode.formatted_address;
       }
       return `坐标: ${lng.toFixed(4)}, ${lat.toFixed(4)}`;
     } catch (e) {
-      console.error('[Markers] 获取地址失败:', e);
       return `坐标: ${lng.toFixed(4)}, ${lat.toFixed(4)}`;
     }
   }
@@ -147,8 +236,6 @@
   async function addMarker(lng, lat) {
     const viewer = window.viewer;
     if (!viewer) return;
-
-    console.log('[Markers] 添加标记:', lng, lat);
 
     const gcj = wgs84ToGcj02(lng, lat);
     const address = await getAddress(gcj.lng, gcj.lat);
@@ -183,7 +270,6 @@
     });
 
     markers.push(marker);
-    console.log('[Markers] 标记成功:', address);
   }
 
   // WGS84 转 GCJ02
@@ -199,6 +285,12 @@
     dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
     dLng = (dLng * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
     return { lng: lng + dLng, lat: lat + dLat };
+  }
+
+  // GCJ02 转 WGS84
+  function gcj02ToWgs84(lng, lat) {
+    const gcj = wgs84ToGcj02(lng, lat);
+    return { lng: lng * 2 - gcj.lng, lat: lat * 2 - gcj.lat };
   }
 
   function transformLat(x, y) {
@@ -225,33 +317,26 @@
       return;
     }
 
-    console.log('[Markers] 地图加载完成，绑定点击事件');
-
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     
     handler.setInputAction((click) => {
       if (!addMode) return;
 
-      console.log('[Markers] 地图点击:', click.position);
-
       const cartesian = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
       
       if (!cartesian) {
-        console.log('[Markers] pickEllipsoid 失败，尝试 globe.pick');
         const ray = viewer.camera.getPickRay(click.position);
         const cartesian2 = viewer.scene.globe.pick(ray, viewer.scene);
         if (cartesian2) {
           const cartographic = Cesium.Cartographic.fromCartesian(cartesian2);
           const lng = Cesium.Math.toDegrees(cartographic.longitude);
           const lat = Cesium.Math.toDegrees(cartographic.latitude);
-          console.log('[Markers] 坐标(globe):', lng, lat);
           addMarker(lng, lat);
         }
       } else {
         const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
         const lng = Cesium.Math.toDegrees(cartographic.longitude);
         const lat = Cesium.Math.toDegrees(cartographic.latitude);
-        console.log('[Markers] 坐标(ellipsoid):', lng, lat);
         addMarker(lng, lat);
       }
 
@@ -275,8 +360,6 @@
         setTimeout(setupClickHandler, 1000);
       }
     }, 500);
-
-    console.log('[Markers] 功能加载完成');
   }
 
   if (document.readyState === 'loading') {
