@@ -693,11 +693,28 @@
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     
     handler.setInputAction((click) => {
-      // 先检查是不是点到了标记
+      // 点击标记弹出导航
       const pickedObject = viewer.scene.pick(click.position);
       if (Cesium.defined(pickedObject) && pickedObject.id.billboard) {
         selectedMarker = pickedObject.id;
         document.getElementById('nav-panel').style.display = 'block';
+        
+        // 显示该位置的卫星照片
+        const pos = pickedObject.id.position.getValue();
+        const carto = Cesium.Cartographic.fromCartesian(pos);
+        const lng = Cesium.Math.toDegrees(carto.longitude);
+        const lat = Cesium.Math.toDegrees(carto.latitude);
+        const gcj = wgs84ToGcj02(lng, lat);
+        
+        document.getElementById('nav-result').innerHTML = `
+          <div style="color:#00ff88; margin-top:10px;">📍 标记位置</div>
+          <div style="margin-top:5px;">经度：${lng.toFixed(4)}</div>
+          <div style="margin-top:5px;">纬度：${lat.toFixed(4)}</div>
+          <div style="margin-top:10px;">
+            <img src="/api/amap-static?location=${gcj.lng},${gcj.lat}&zoom=16&size=400*250" 
+                 style="width:100%; border-radius:6px; border:1px solid #00ff88;">
+          </div>
+        `;
         return;
       }
 
