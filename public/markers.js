@@ -367,10 +367,12 @@
 
       // 调用路线规划 API
       const routeUrl = `/api/amap-route?origin=${startGcj.lng},${startGcj.lat}&destination=${destLng},${destLat}`;
+      console.log('[Nav] 路线请求:', routeUrl);
       const routeResp = await fetch(routeUrl);
       const routeData = await routeResp.json();
+      console.log('[Nav] 路线结果:', routeData);
 
-      if (routeData.status === '1' && routeData.route && routeData.paths && routeData.route.paths.length > 0) {
+      if (routeData.status === '1' && routeData.route && routeData.route.paths && routeData.route.paths.length > 0) {
         const path = routeData.route.paths[0];
         const distance = (path.distance / 1000).toFixed(1);
         const duration = Math.round(path.duration / 60);
@@ -385,7 +387,7 @@
           <div style="margin-top:5px;">⏱️ 预计时间：${duration} 分钟</div>
         `;
       } else {
-        document.getElementById('nav-result').innerHTML = '❌ 路线规划失败: ' + (routeData.info || '未知错误');
+        document.getElementById('nav-result').innerHTML = '❌ 路线规划失败: ' + (routeData.info || routeData.status || '未知错误') + '<br><small style="color:#666;">起点: ' + startGcj.lng.toFixed(4) + ',' + startGcj.lat.toFixed(4) + '<br>终点: ' + destLng + ',' + destLat + '</small>';
       }
     } catch (e) {
       console.error('[Nav] 导航失败:', e);
