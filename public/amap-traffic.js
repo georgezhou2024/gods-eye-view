@@ -34,6 +34,38 @@ function gcj02ToWgs84(lng, lat) {
   return [lng * 2 - mgLng, lat * 2 - mgLat];
 }
 
+// WGS84 转 GCJ-02（火星坐标）
+function wgs84ToGcj02(lng, lat) {
+  const a = 6378245.0;
+  const ee = 0.00669342162296594323;
+
+  function transformLat(lng, lat) {
+    let ret = -100.0 + 2.0 * lng + 3.0 * lat + 0.2 * lat * lat + 0.1 * lng * lat + 0.2 * Math.sqrt(Math.abs(lng));
+    ret += (20.0 * Math.sin(6.0 * lng * Math.PI) + 20.0 * Math.sin(2.0 * lng * Math.PI)) * 2.0 / 3.0;
+    ret += (20.0 * Math.sin(lat * Math.PI) + 40.0 * Math.sin(lat / 3.0 * Math.PI)) * 2.0 / 3.0;
+    ret += (160.0 * Math.sin(lat / 12.0 * Math.PI) + 320 * Math.sin(lat * Math.PI / 30.0)) * 2.0 / 3.0;
+    return ret;
+  }
+
+  function transformLng(lng, lat) {
+    let ret = 300.0 + lng + 2.0 * lat + 0.1 * lng * lng + 0.1 * lng * lat + 0.1 * Math.sqrt(Math.abs(lng));
+    ret += (20.0 * Math.sin(6.0 * lng * Math.PI) + 20.0 * Math.sin(2.0 * lng * Math.PI)) * 2.0 / 3.0;
+    ret += (20.0 * Math.sin(lng * Math.PI) + 40.0 * Math.sin(lng / 3.0 * Math.PI)) * 2.0 / 3.0;
+    ret += (150.0 * Math.sin(lng / 12.0 * Math.PI) + 300.0 * Math.sin(lng / 30.0 * Math.PI)) * 2.0 / 3.0;
+    return ret;
+  }
+
+  let dLat = transformLat(lng - 105.0, lat - 35.0);
+  let dLng = transformLng(lng - 105.0, lat - 35.0);
+  const radLat = lat / 180.0 * Math.PI;
+  let magic = Math.sin(radLat);
+  magic = 1 - ee * magic * magic;
+  const sqrtMagic = Math.sqrt(magic);
+  dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+  dLng = (dLng * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
+  return [lng + dLng, lat + dLat];
+}
+
 // 根据拥堵状态返回颜色
 function getStatusColor(status) {
   const C = window.Cesium;
@@ -83,12 +115,14 @@ function drawTrafficRoads(roads) {
 
 // 查询交通路况
 function queryTraffic(lng, lat) {
-  // 方圆约 3 公里（经纬度差约 0.025 度，对角线约 5 公里，不超 10 公里限制）
+  // 先把 WGS84 坐标转成 GCJ-02（高德需要火星坐标）
+  const [gcjLng, gcjLat] = wgs84ToGcj02(lng, lat);
+  // 方圆约 3 公里（经纬度差约 0.022 度，对角线约 5 公里，不超 10 公里限制）
   const delta = 0.022;
-  const minLng = (lng - delta).toFixed(6);
-  const minLat = (lat - delta).toFixed(6);
-  const maxLng = (lng + delta).toFixed(6);
-  const maxLat = (lat + delta).toFixed(6);
+  const minLng = (gcjLng - delta).toFixed(6);
+  const minLat = (gcjLat - delta).toFixed(6);
+  const maxLng = (gcjLng + delta).toFixed(6);
+  const maxLat = (gcjLat + delta).toFixed(6);
   const rect = `${minLng},${minLat};${maxLng},${maxLat}`;
 
   const content = document.getElementById('amap-traffic-content');
