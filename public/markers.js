@@ -202,6 +202,17 @@
         margin-bottom: 10px;
         outline: none;
       ">
+      <div id="nav-suggest" style="
+        display: none;
+        background: #222;
+        border: 1px solid #00ff88;
+        border-radius: 6px;
+        max-height: 150px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 1000;
+      "></div>
       <button id="nav-go" style="
         width: 100%;
         background: #00ff88;
@@ -214,15 +225,6 @@
         cursor: pointer;
         margin-bottom: 10px;
       ">开始导航</button>
-      <div id="nav-suggest" style="
-        display: none;
-        background: #222;
-        border: 1px solid #00ff88;
-        border-radius: 6px;
-        max-height: 150px;
-        overflow-y: auto;
-        margin-bottom: 10px;
-      "></div>
       <button id="nav-clear" style="
         width: 100%;
         background: #333;
