@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const key = process.env.AMAP_WEB_SERVICE_KEY;
+  const key = process.env.AMAP_WEB_SERVICE_KEY || '1213edcbeb01da766f9487c8a574c440';
   if (!key) {
     res.status(500).json({ error: 'no_key', message: '未配置 AMAP_WEB_SERVICE_KEY' });
     return;
