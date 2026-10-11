@@ -95,7 +95,7 @@ function queryTraffic(lng, lat) {
   if (content) content.innerHTML = '⏳ 加载中...';
 
   const xhr = new XMLHttpRequest();
-  xhr.open('GET', `/api/amap/traffic?rect=${rect}`, true);
+  xhr.open('GET', `/api/amap-traffic?rect=${rect}`, true);
   xhr.onload = function() {
     try {
       const data = JSON.parse(xhr.responseText);
