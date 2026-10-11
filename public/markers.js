@@ -549,7 +549,7 @@
       const lng = Cesium.Math.toDegrees(carto.longitude);
       const lat = Cesium.Math.toDegrees(carto.latitude);
       window.viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(lng, lat, 350), // 拉近到350米高度
+        destination: Cesium.Cartesian3.fromDegrees(lng, lat, 1000), // 拉近到1000米高度
         orientation: {
           heading: 0,
           pitch: Cesium.Math.toRadians(-90),
