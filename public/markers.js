@@ -4,7 +4,6 @@
 
   let markers = [];
   let addMode = false;
-  let viewerReady = false;
 
   // 创建 UI 按钮
   function createUI() {
@@ -28,16 +27,19 @@
     `;
     document.body.appendChild(btn);
 
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       addMode = !addMode;
       if (addMode) {
         btn.innerHTML = '📍 点击地图...';
         btn.style.background = '#00ff88';
         btn.style.color = '#1a1a2e';
+        console.log('[Markers] 添加模式开启');
       } else {
         btn.innerHTML = '📍 添加标记';
         btn.style.background = '#1a1a2e';
         btn.style.color = '#00ff88';
+        console.log('[Markers] 添加模式关闭');
       }
     });
   }
@@ -47,17 +49,16 @@
     try {
       console.log('[Markers] 查询地址:', lng, lat);
       const url = `/api/amap-geocode?location=${lng},${lat}`;
-      console.log('[Markers] 请求:', url);
       const resp = await fetch(url);
       const data = await resp.json();
       console.log('[Markers] 地址结果:', data);
       if (data.status === '1' && data.regeocode) {
         return data.regeocode.formatted_address;
       }
-      return '未知地址';
+      return `坐标: ${lng.toFixed(4)}, ${lat.toFixed(4)}`;
     } catch (e) {
       console.error('[Markers] 获取地址失败:', e);
-      return '地址获取失败';
+      return `坐标: ${lng.toFixed(4)}, ${lat.toFixed(4)}`;
     }
   }
 
@@ -77,7 +78,7 @@
 
     // 创建图钉标记
     const marker = viewer.entities.add({
-      position: Cesium.Cartesian3.fromDegrees(lng, lat, 0),
+      position: Cesium.Cartesian3.fromDegrees(lng, lat, 100),
       billboard: {
         image: 'data:image/svg+xml;base64,' + btoa(`
           <svg xmlns="http://www.w3.org/2000/svg" width="36" height="45" viewBox="0 0 36 45">
@@ -88,6 +89,7 @@
         width: 36,
         height: 45,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
       },
       label: {
         text: address,
@@ -100,12 +102,7 @@
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         outlineWidth: 2,
         outlineColor: Cesium.Color.BLACK,
-      },
-      properties: { 
-        address: address, 
-        lng: lng, 
-        lat: lat,
-        time: new Date().toLocaleString()
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
       },
     });
 
@@ -155,24 +152,34 @@
     console.log('[Markers] 地图加载完成，绑定点击事件');
 
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    
     handler.setInputAction((click) => {
       if (!addMode) return;
 
       console.log('[Markers] 地图点击:', click.position);
 
-      const ray = viewer.camera.getPickRay(click.position);
-      const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+      // 用 pickEllipsoid 检测点击位置（兼容 3D 和 2D 模式）
+      const cartesian = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+      
       if (!cartesian) {
-        console.log('[Markers] 没点到地球');
-        return;
+        console.log('[Markers] pickEllipsoid 失败，尝试 globe.pick');
+        const ray = viewer.camera.getPickRay(click.position);
+        const cartesian2 = viewer.scene.globe.pick(ray, viewer.scene);
+        if (cartesian2) {
+          const cartographic = Cesium.Cartographic.fromCartesian(cartesian2);
+          const lng = Cesium.Math.toDegrees(cartographic.longitude);
+          const lat = Cesium.Math.toDegrees(cartographic.latitude);
+          console.log('[Markers] 坐标(globe):', lng, lat);
+          addMarker(lng, lat);
+        }
+      } else {
+        const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+        const lng = Cesium.Math.toDegrees(cartographic.longitude);
+        const lat = Cesium.Math.toDegrees(cartographic.latitude);
+        console.log('[Markers] 坐标(ellipsoid):', lng, lat);
+        addMarker(lng, lat);
       }
 
-      const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-      const lng = Cesium.Math.toDegrees(cartographic.longitude);
-      const lat = Cesium.Math.toDegrees(cartographic.latitude);
-
-      console.log('[Markers] 坐标:', lng, lat);
-      addMarker(lng, lat);
       addMode = false;
       const btn = document.getElementById('add-marker-btn');
       if (btn) {
@@ -191,7 +198,7 @@
     const checkViewer = setInterval(() => {
       if (window.viewer && window.Cesium) {
         clearInterval(checkViewer);
-        setupClickHandler();
+        setTimeout(setupClickHandler, 1000);
       }
     }, 500);
 
