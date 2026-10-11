@@ -544,6 +544,20 @@
       index += 1;
       navCar.position = allPoints[index];
       
+      // 地图跟着红点移动
+      const carto = Cesium.Cartographic.fromCartesian(allPoints[index]);
+      const lng = Cesium.Math.toDegrees(carto.longitude);
+      const lat = Cesium.Math.toDegrees(carto.latitude);
+      window.viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(lng, lat, 2000), // 拉近到2000米高度
+        orientation: {
+          heading: 0,
+          pitch: Cesium.Math.toRadians(-90),
+          roll: 0,
+        },
+        duration: 0.5, // 快速跟随
+      });
+      
       // 显示进度
       const progress = Math.round(index / allPoints.length * 100);
       document.getElementById('nav-result').innerHTML = 
