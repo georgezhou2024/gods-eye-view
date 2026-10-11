@@ -544,6 +544,37 @@
     }, 100);
   }
 
+  // 画路线
+  function drawRoute(steps) {
+    if (!window.viewer) return;
+
+    if (routeEntity) {
+      window.viewer.entities.remove(routeEntity);
+    }
+
+    const positions = [];
+    steps.forEach(step => {
+      const coords = step.polyline.split(';');
+      coords.forEach(coord => {
+        const [lng, lat] = coord.split(',').map(Number);
+        const wgs = gcj02ToWgs84(lng, lat);
+        positions.push(Cesium.Cartesian3.fromDegrees(wgs.lng, wgs.lat, 50));
+      });
+    });
+
+    routeEntity = window.viewer.entities.add({
+      polyline: {
+        positions: positions,
+        width: 5,
+        material: new Cesium.PolylineGlowMaterialProperty({
+          glowPower: 0.2,
+          color: Cesium.Color.YELLOW,
+        }),
+        clampToGround: true,
+      },
+    });
+  }
+
   let navCar = null;
 
   async function addMarker(lng, lat) {
