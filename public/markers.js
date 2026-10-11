@@ -214,6 +214,26 @@
         cursor: pointer;
         margin-bottom: 10px;
       ">开始导航</button>
+      <div id="nav-suggest" style="
+        display: none;
+        background: #222;
+        border: 1px solid #00ff88;
+        border-radius: 6px;
+        max-height: 150px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+      "></div>
+      <button id="nav-clear" style="
+        width: 100%;
+        background: #333;
+        color: #ff4444;
+        border: 1px solid #ff4444;
+        border-radius: 6px;
+        padding: 8px;
+        font-size: 12px;
+        cursor: pointer;
+        margin-bottom: 10px;
+      ">🗑️ 清除路线</button>
       <div id="nav-result" style="font-size:13px; color:#888;"></div>
       <button id="nav-close" style="
         width: 100%;
@@ -229,11 +249,58 @@
     document.body.appendChild(navPanel);
 
     // 导航事件
+    const destInput = document.getElementById('nav-dest');
+    const suggestDiv = document.getElementById('nav-suggest');
+    let selectedDest = null;
+
+    // 输入时自动搜索
+    let suggestTimeout;
+    destInput.addEventListener('input', () => {
+      clearTimeout(suggestTimeout);
+      suggestTimeout = setTimeout(async () => {
+        if (!destInput.value.trim()) {
+          suggestDiv.style.display = 'none';
+          return;
+        }
+        try {
+          const resp = await fetch(`/api/amap-search?keywords=${encodeURIComponent(destInput.value.trim())}`);
+          const data = await resp.json();
+          if (data.status === '1' && data.pois) {
+            suggestDiv.innerHTML = '';
+            suggestDiv.style.display = 'block';
+            data.pois.slice(0, 5).forEach(poi => {
+              const item = document.createElement('div');
+              item.style.cssText = 'padding:8px 12px; cursor:pointer; border-bottom:1px solid #333; font-size:12px;';
+              item.innerHTML = `<div style="color:#00ff88;">${poi.name}</div><div style="color:#888; font-size:10px;">${poi.address || ''}</div>`;
+              item.addEventListener('click', () => {
+                destInput.value = poi.name;
+                selectedDest = poi;
+                suggestDiv.style.display = 'none';
+              });
+              suggestDiv.appendChild(item);
+            });
+          }
+        } catch (e) {}
+      }, 500);
+    });
+
     document.getElementById('nav-go').addEventListener('click', () => {
-      const dest = document.getElementById('nav-dest').value.trim();
+      const dest = destInput.value.trim();
       if (dest && selectedMarker) {
         startNavigation(selectedMarker, dest);
       }
+    });
+
+    document.getElementById('nav-clear').addEventListener('click', () => {
+      if (routeEntity && window.viewer) {
+        window.viewer.entities.remove(routeEntity);
+        routeEntity = null;
+      }
+      if (navCar && window.viewer) {
+        window.viewer.entities.remove(navCar);
+        navCar = null;
+      }
+      document.getElementById('nav-result').innerHTML = '';
     });
 
     document.getElementById('nav-close').addEventListener('click', () => {
@@ -391,27 +458,30 @@
 
       if (drivingRes.status === '1' && drivingRes.route && drivingRes.route.paths && drivingRes.route.paths.length > 0) {
         const path = drivingRes.route.paths[0];
-        const dist = (path.distance / 1000).toFixed(1);
+        const distKm = (path.distance / 1000).toFixed(1);
+        const distM = Math.round(path.distance % 1000);
         const time = Math.round(path.duration / 60);
-        html += `<div style="margin-top:5px;">🚗 驾车：${dist} 公里，约 ${time} 分钟</div>`;
+        html += `<div style="margin-top:5px;">🚗 驾车：${distKm} 公里 ${distM} 米，约 ${time} 分钟</div>`;
       } else {
         html += `<div style="margin-top:5px; color:#888;">🚗 驾车：不可用</div>`;
       }
 
       if (bicyclingRes.errcode === 0 && bicyclingRes.data && bicyclingRes.data.paths && bicyclingRes.data.paths.length > 0) {
         const path = bicyclingRes.data.paths[0];
-        const dist = (path.distance / 1000).toFixed(1);
+        const distKm = (path.distance / 1000).toFixed(1);
+        const distM = Math.round(path.distance % 1000);
         const time = Math.round(path.duration / 60);
-        html += `<div style="margin-top:5px;">🚲 骑行：${dist} 公里，约 ${time} 分钟</div>`;
+        html += `<div style="margin-top:5px;">🚲 骑行：${distKm} 公里 ${distM} 米，约 ${time} 分钟</div>`;
       } else {
         html += `<div style="margin-top:5px; color:#888;">🚲 骑行：不可用</div>`;
       }
 
       if (walkingRes.status === '1' && walkingRes.route && walkingRes.route.paths && walkingRes.route.paths.length > 0) {
         const path = walkingRes.route.paths[0];
-        const dist = (path.distance / 1000).toFixed(1);
+        const distKm = (path.distance / 1000).toFixed(1);
+        const distM = Math.round(path.distance % 1000);
         const time = Math.round(path.duration / 60);
-        html += `<div style="margin-top:5px;">🚶 步行：${dist} 公里，约 ${time} 分钟</div>`;
+        html += `<div style="margin-top:5px;">🚶 步行：${distKm} 公里 ${distM} 米，约 ${time} 分钟</div>`;
       } else {
         html += `<div style="margin-top:5px; color:#888;">🚶 步行：不可用</div>`;
       }
