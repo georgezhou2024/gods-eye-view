@@ -348,7 +348,6 @@
       const startCart = Cesium.Cartographic.fromCartesian(startPos);
       const startLng = Cesium.Math.toDegrees(startCart.longitude);
       const startLat = Cesium.Math.toDegrees(startCart.latitude);
-      const startGcj = wgs84ToGcj02(startLng, startLat);
 
       // 搜索目的地
       const searchUrl = `/api/amap-search?keywords=${encodeURIComponent(destName)}`;
@@ -362,62 +361,60 @@
 
       const dest = searchData.pois[0];
       const destLoc = dest.location.split(',');
-      const destLng = parseFloat(destLoc[0]);
-      const destLat = parseFloat(destLoc[1]);
+      const destLngGcj = parseFloat(destLoc[0]);
+      const destLatGcj = parseFloat(destLoc[1]);
+      const destWgs = gcj02ToWgs84(destLngGcj, destLatGcj);
 
-      // 调用路线规划 API
-      const routeUrl = `/api/amap-route?origin=${startGcj.lng},${startGcj.lat}&destination=${destLng},${destLat}`;
-      console.log('[Nav] 路线请求:', routeUrl);
-      const routeResp = await fetch(routeUrl);
-      const routeData = await routeResp.json();
-      console.log('[Nav] 路线结果:', routeData);
+      // 计算直线距离
+      const distance = calculateDistance(startLng, startLat, destWgs.lng, destWgs.lat);
+      const duration = Math.round(distance / 60 * 60); // 按 60km/h 算
 
-      if (routeData.status === '1' && routeData.route && routeData.route.paths && routeData.route.paths.length > 0) {
-        const path = routeData.route.paths[0];
-        const distance = (path.distance / 1000).toFixed(1);
-        const duration = Math.round(path.duration / 60);
+      // 画路线（直线）
+      drawDirectRoute(startLng, startLat, destWgs.lng, destWgs.lat);
 
-        // 画路线
-        drawRoute(path.steps);
+      document.getElementById('nav-result').innerHTML = `
+        <div style="color:#00ff88; margin-top:10px;">✅ 路线规划完成</div>
+        <div style="margin-top:5px;">📍 目的地：${dest.name}</div>
+        <div style="margin-top:5px;">📏 距离：${distance.toFixed(1)} 公里</div>
+        <div style="margin-top:5px;">⏱️ 预计时间：${duration} 分钟</div>
+      `;
 
-        document.getElementById('nav-result').innerHTML = `
-          <div style="color:#00ff88; margin-top:10px;">✅ 路线规划完成</div>
-          <div style="margin-top:5px;">📍 目的地：${dest.name}</div>
-          <div style="margin-top:5px;">📏 距离：${distance} 公里</div>
-          <div style="margin-top:5px;">⏱️ 预计时间：${duration} 分钟</div>
-        `;
-      } else {
-        document.getElementById('nav-result').innerHTML = '❌ 路线规划失败: ' + (routeData.info || routeData.status || '未知错误') + '<br><small style="color:#666;">起点: ' + startGcj.lng.toFixed(4) + ',' + startGcj.lat.toFixed(4) + '<br>终点: ' + destLng + ',' + destLat + '</small>';
-      }
+      // 飞过去
+      flyTo((startLng + destWgs.lng) / 2, (startLat + destWgs.lat) / 2);
     } catch (e) {
       console.error('[Nav] 导航失败:', e);
       document.getElementById('nav-result').innerHTML = '❌ 导航失败: ' + e.message;
     }
   }
 
-  // 画路线
-  function drawRoute(steps) {
+  // 计算两点距离（公里）
+  function calculateDistance(lng1, lat1, lng2, lat2) {
+    const R = 6371; // 地球半径
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+
+  // 画直线路线
+  function drawDirectRoute(lng1, lat1, lng2, lat2) {
     if (!window.viewer) return;
 
     if (routeEntity) {
       window.viewer.entities.remove(routeEntity);
     }
 
-    const positions = [];
-    steps.forEach(step => {
-      const coords = step.polyline.split(';');
-      coords.forEach(coord => {
-        const [lng, lat] = coord.split(',').map(Number);
-        const wgs = gcj02ToWgs84(lng, lat);
-        positions.push(Cesium.Cartesian3.fromDegrees(wgs.lng, wgs.lat, 50));
-      });
-    });
-
     routeEntity = window.viewer.entities.add({
       polyline: {
-        positions: positions,
+        positions: Cesium.Cartesian3.fromDegreesArray([lng1, lat1, lng2, lat2]),
         width: 5,
-        material: Cesium.Color.YELLOW,
+        material: new Cesium.PolylineGlowMaterialProperty({
+          glowPower: 0.2,
+          color: Cesium.Color.YELLOW,
+        }),
         clampToGround: true,
       },
     });
