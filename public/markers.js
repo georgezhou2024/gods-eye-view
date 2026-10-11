@@ -1,12 +1,16 @@
 // 标记功能：点击地图添加标记，显示地址和照片
+// + 快捷城市按钮（北京、上海）
+// + 右上角面板收缩
+
 (function() {
-  console.log('[Markers] 标记功能加载中...');
+  console.log('[Markers] 功能加载中...');
 
   let markers = [];
   let addMode = false;
 
-  // 创建 UI 按钮
+  // 创建 UI
   function createUI() {
+    // 1. 添加标记按钮（右下角）
     const btn = document.createElement('button');
     btn.id = 'add-marker-btn';
     btn.innerHTML = '📍 添加标记';
@@ -34,14 +38,91 @@
         btn.innerHTML = '📍 点击地图...';
         btn.style.background = '#00ff88';
         btn.style.color = '#1a1a2e';
-        console.log('[Markers] 添加模式开启');
       } else {
         btn.innerHTML = '📍 添加标记';
         btn.style.background = '#1a1a2e';
         btn.style.color = '#00ff88';
-        console.log('[Markers] 添加模式关闭');
       }
     });
+
+    // 2. 清除所有标记按钮
+    const clearBtn = document.createElement('button');
+    clearBtn.id = 'clear-markers-btn';
+    clearBtn.innerHTML = '🗑️ 清除标记';
+    clearBtn.style.cssText = `
+      position: fixed;
+      bottom: 130px;
+      right: 20px;
+      z-index: 99999;
+      background: #1a1a2e;
+      color: #ff4444;
+      border: 1px solid #ff4444;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    `;
+    document.body.appendChild(clearBtn);
+
+    clearBtn.addEventListener('click', () => {
+      const viewer = window.viewer;
+      if (!viewer) return;
+      markers.forEach(m => viewer.entities.remove(m));
+      markers = [];
+      console.log('[Markers] 已清除所有标记');
+    });
+
+    // 3. 快捷城市按钮（北京、上海）
+    const cityBar = document.createElement('div');
+    cityBar.id = 'quick-cities';
+    cityBar.style.cssText = `
+      position: fixed;
+      top: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 99999;
+      display: flex;
+      gap: 10px;
+      font-family: 'Inter', sans-serif;
+    `;
+    
+    const cities = [
+      { name: '北京', lng: 116.4074, lat: 39.9042 },
+      { name: '上海', lng: 121.4737, lat: 31.2304 },
+    ];
+
+    cities.forEach(city => {
+      const btn = document.createElement('button');
+      btn.innerHTML = `📍 ${city.name}`;
+      btn.style.cssText = `
+        background: #1a1a2e;
+        color: #00ff88;
+        border: 1px solid #00ff88;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      `;
+      btn.addEventListener('click', () => {
+        const viewer = window.viewer;
+        if (!viewer) return;
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(city.lng, city.lat, 600),
+          orientation: {
+            heading: Cesium.Math.toRadians(0),
+            pitch: Cesium.Math.toRadians(-35),
+            roll: 0.0,
+          },
+          duration: 2.0,
+        });
+      });
+      cityBar.appendChild(btn);
+    });
+
+    document.body.appendChild(cityBar);
   }
 
   // 获取地址（反向地理编码）
@@ -65,18 +146,13 @@
   // 添加标记
   async function addMarker(lng, lat) {
     const viewer = window.viewer;
-    if (!viewer) {
-      alert('地图还没加载完');
-      return;
-    }
+    if (!viewer) return;
 
     console.log('[Markers] 添加标记:', lng, lat);
 
-    // WGS84 转 GCJ02
     const gcj = wgs84ToGcj02(lng, lat);
     const address = await getAddress(gcj.lng, gcj.lat);
 
-    // 创建图钉标记
     const marker = viewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(lng, lat, 100),
       billboard: {
@@ -158,7 +234,6 @@
 
       console.log('[Markers] 地图点击:', click.position);
 
-      // 用 pickEllipsoid 检测点击位置（兼容 3D 和 2D 模式）
       const cartesian = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
       
       if (!cartesian) {
@@ -194,7 +269,6 @@
   function init() {
     createUI();
     
-    // 等 viewer 加载
     const checkViewer = setInterval(() => {
       if (window.viewer && window.Cesium) {
         clearInterval(checkViewer);
@@ -202,7 +276,7 @@
       }
     }, 500);
 
-    console.log('[Markers] 标记功能加载完成');
+    console.log('[Markers] 功能加载完成');
   }
 
   if (document.readyState === 'loading') {
