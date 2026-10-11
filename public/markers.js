@@ -348,6 +348,7 @@
       const startCart = Cesium.Cartographic.fromCartesian(startPos);
       const startLng = Cesium.Math.toDegrees(startCart.longitude);
       const startLat = Cesium.Math.toDegrees(startCart.latitude);
+      const startGcj = wgs84ToGcj02(startLng, startLat);
 
       // 搜索目的地
       const searchUrl = `/api/amap-search?keywords=${encodeURIComponent(destName)}`;
@@ -363,62 +364,115 @@
       const destLoc = dest.location.split(',');
       const destLngGcj = parseFloat(destLoc[0]);
       const destLatGcj = parseFloat(destLoc[1]);
-      const destWgs = gcj02ToWgs84(destLngGcj, destLatGcj);
 
-      // 计算直线距离
-      const distance = calculateDistance(startLng, startLat, destWgs.lng, destWgs.lat);
-      const duration = Math.round(distance / 60 * 60); // 按 60km/h 算
+      // 并行查询三种路线
+      document.getElementById('nav-result').innerHTML = '⏳ 正在规划路线...';
 
-      // 画路线（直线）
-      drawDirectRoute(startLng, startLat, destWgs.lng, destWgs.lat);
+      const [drivingRes, bicyclingRes, walkingRes] = await Promise.all([
+        fetch(`/api/amap-route?origin=${startGcj.lng},${startGcj.lat}&destination=${destLngGcj},${destLatGcj}&type=driving`).then(r => r.json()),
+        fetch(`/api/amap-route?origin=${startGcj.lng},${startGcj.lat}&destination=${destLngGcj},${destLatGcj}&type=bicycling`).then(r => r.json()),
+        fetch(`/api/amap-route?origin=${startGcj.lng},${startGcj.lat}&destination=${destLngGcj},${destLatGcj}&type=walking`).then(r => r.json()),
+      ]);
 
-      document.getElementById('nav-result').innerHTML = `
-        <div style="color:#00ff88; margin-top:10px;">✅ 路线规划完成</div>
-        <div style="margin-top:5px;">📍 目的地：${dest.name}</div>
-        <div style="margin-top:5px;">📏 距离：${distance.toFixed(1)} 公里</div>
-        <div style="margin-top:5px;">⏱️ 预计时间：${duration} 分钟</div>
-      `;
+      console.log('[Nav] 驾车:', drivingRes);
+      console.log('[Nav] 骑行:', bicyclingRes);
+      console.log('[Nav] 步行:', walkingRes);
 
-      // 飞过去
-      flyTo((startLng + destWgs.lng) / 2, (startLat + destWgs.lat) / 2);
+      // 画驾车路线
+      let routeCoords = null;
+      if (drivingRes.status === '1' && drivingRes.route && drivingRes.route.paths && drivingRes.route.paths.length > 0) {
+        routeCoords = drivingRes.route.paths[0].steps;
+        drawRoute(routeCoords);
+      }
+
+      // 显示结果
+      let html = `<div style="color:#00ff88; margin-top:10px;">✅ 路线规划完成</div>`;
+      html += `<div style="margin-top:8px;">📍 目的地：${dest.name}</div>`;
+
+      if (drivingRes.status === '1' && drivingRes.route && drivingRes.route.paths && drivingRes.route.paths.length > 0) {
+        const path = drivingRes.route.paths[0];
+        const dist = (path.distance / 1000).toFixed(1);
+        const time = Math.round(path.duration / 60);
+        html += `<div style="margin-top:5px;">🚗 驾车：${dist} 公里，约 ${time} 分钟</div>`;
+      } else {
+        html += `<div style="margin-top:5px; color:#888;">🚗 驾车：不可用</div>`;
+      }
+
+      if (bicyclingRes.errcode === 0 && bicyclingRes.data && bicyclingRes.data.paths && bicyclingRes.data.paths.length > 0) {
+        const path = bicyclingRes.data.paths[0];
+        const dist = (path.distance / 1000).toFixed(1);
+        const time = Math.round(path.duration / 60);
+        html += `<div style="margin-top:5px;">🚲 骑行：${dist} 公里，约 ${time} 分钟</div>`;
+      } else {
+        html += `<div style="margin-top:5px; color:#888;">🚲 骑行：不可用</div>`;
+      }
+
+      if (walkingRes.status === '1' && walkingRes.route && walkingRes.route.paths && walkingRes.route.paths.length > 0) {
+        const path = walkingRes.route.paths[0];
+        const dist = (path.distance / 1000).toFixed(1);
+        const time = Math.round(path.duration / 60);
+        html += `<div style="margin-top:5px;">🚶 步行：${dist} 公里，约 ${time} 分钟</div>`;
+      } else {
+        html += `<div style="margin-top:5px; color:#888;">🚶 步行：不可用</div>`;
+      }
+
+      document.getElementById('nav-result').innerHTML = html;
+
+      // 开始导航动画
+      if (routeCoords) {
+        startNavigationAnimation(routeCoords);
+      }
     } catch (e) {
       console.error('[Nav] 导航失败:', e);
       document.getElementById('nav-result').innerHTML = '❌ 导航失败: ' + e.message;
     }
   }
 
-  // 计算两点距离（公里）
-  function calculateDistance(lng1, lat1, lng2, lat2) {
-    const R = 6371; // 地球半径
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  }
-
-  // 画直线路线
-  function drawDirectRoute(lng1, lat1, lng2, lat2) {
+  // 导航动画
+  function startNavigationAnimation(steps) {
     if (!window.viewer) return;
 
-    if (routeEntity) {
-      window.viewer.entities.remove(routeEntity);
+    // 收集所有路线点
+    const allPoints = [];
+    steps.forEach(step => {
+      const coords = step.polyline.split(';');
+      coords.forEach(coord => {
+        const [lng, lat] = coord.split(',').map(Number);
+        const wgs = gcj02ToWgs84(lng, lat);
+        allPoints.push(Cesium.Cartesian3.fromDegrees(wgs.lng, wgs.lat, 50));
+      });
+    });
+
+    if (allPoints.length < 2) return;
+
+    // 创建移动的点
+    if (navCar) {
+      window.viewer.entities.remove(navCar);
     }
 
-    routeEntity = window.viewer.entities.add({
-      polyline: {
-        positions: Cesium.Cartesian3.fromDegreesArray([lng1, lat1, lng2, lat2]),
-        width: 5,
-        material: new Cesium.PolylineGlowMaterialProperty({
-          glowPower: 0.2,
-          color: Cesium.Color.YELLOW,
-        }),
-        clampToGround: true,
+    navCar = window.viewer.entities.add({
+      position: allPoints[0],
+      point: {
+        pixelSize: 15,
+        color: Cesium.Color.RED,
+        outlineColor: Cesium.Color.WHITE,
+        outlineWidth: 3,
       },
     });
+
+    // 沿着路线移动
+    let index = 0;
+    const moveInterval = setInterval(() => {
+      if (index >= allPoints.length) {
+        clearInterval(moveInterval);
+        return;
+      }
+      navCar.position = allPoints[index];
+      index += 2; // 加速
+    }, 100);
   }
+
+  let navCar = null;
 
   async function addMarker(lng, lat) {
     const viewer = window.viewer;

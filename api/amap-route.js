@@ -1,5 +1,5 @@
-// Vercel Serverless Function: 高德驾车路线规划
-// 部署后通过 /api/amap-route?origin=经度,纬度&destination=经度,纬度 访问
+// Vercel Serverless Function: 高德路线规划（驾车/骑行/步行）
+// 部署后通过 /api/amap-route?origin=经度,纬度&destination=经度,纬度&type=driving
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,6 +14,7 @@ export default async function handler(req, res) {
   const { searchParams } = new URL(req.url, 'http://localhost');
   const origin = searchParams.get('origin');
   const destination = searchParams.get('destination');
+  const type = searchParams.get('type') || 'driving';
 
   if (!origin || !destination) {
     res.status(400).json({ status: '0', info: 'missing_params' });
@@ -26,9 +27,20 @@ export default async function handler(req, res) {
     return;
   }
 
+  let apiUrl;
+  if (type === 'driving') {
+    apiUrl = `https://restapi.amap.com/v3/direction/driving?key=${key}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`;
+  } else if (type === 'bicycling') {
+    apiUrl = `https://restapi.amap.com/v4/direction/bicycling?key=${key}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`;
+  } else if (type === 'walking') {
+    apiUrl = `https://restapi.amap.com/v3/direction/walking?key=${key}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`;
+  } else {
+    res.status(400).json({ status: '0', info: 'invalid_type' });
+    return;
+  }
+
   try {
-    const url = `https://restapi.amap.com/v3/direction/driving?key=${key}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&extensions=base`;
-    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    const response = await fetch(apiUrl, { signal: AbortSignal.timeout(10000) });
     const data = await response.json();
     res.status(200).json(data);
   } catch (err) {
