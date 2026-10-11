@@ -4,6 +4,7 @@
 
   let markers = [];
   let addMode = false;
+  let viewerReady = false;
 
   // 创建 UI 按钮
   function createUI() {
@@ -12,24 +13,25 @@
     btn.innerHTML = '📍 添加标记';
     btn.style.cssText = `
       position: fixed;
-      top: 140px;
-      left: 20px;
+      bottom: 80px;
+      right: 20px;
       z-index: 99999;
       background: #1a1a2e;
       color: #00ff88;
       border: 1px solid #00ff88;
       border-radius: 6px;
-      padding: 8px 16px;
+      padding: 10px 18px;
       font-size: 14px;
       cursor: pointer;
       font-family: 'Inter', sans-serif;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
     `;
     document.body.appendChild(btn);
 
     btn.addEventListener('click', () => {
       addMode = !addMode;
       if (addMode) {
-        btn.innerHTML = '📍 点击地图添加标记...';
+        btn.innerHTML = '📍 点击地图...';
         btn.style.background = '#00ff88';
         btn.style.color = '#1a1a2e';
       } else {
@@ -38,33 +40,17 @@
         btn.style.color = '#00ff88';
       }
     });
-
-    // 创建标记弹窗容器
-    const popup = document.createElement('div');
-    popup.id = 'marker-popup';
-    popup.style.cssText = `
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 999999;
-      background: #1a1a2e;
-      color: #fff;
-      border: 1px solid #00ff88;
-      border-radius: 10px;
-      padding: 20px;
-      width: 320px;
-      font-family: 'Inter', sans-serif;
-    `;
-    document.body.appendChild(popup);
   }
 
   // 获取地址（反向地理编码）
   async function getAddress(lng, lat) {
     try {
-      const resp = await fetch(`/api/amap-geocode?location=${lng},${lat}`);
+      console.log('[Markers] 查询地址:', lng, lat);
+      const url = `/api/amap-geocode?location=${lng},${lat}`;
+      console.log('[Markers] 请求:', url);
+      const resp = await fetch(url);
       const data = await resp.json();
+      console.log('[Markers] 地址结果:', data);
       if (data.status === '1' && data.regeocode) {
         return data.regeocode.formatted_address;
       }
@@ -78,7 +64,12 @@
   // 添加标记
   async function addMarker(lng, lat) {
     const viewer = window.viewer;
-    if (!viewer) return;
+    if (!viewer) {
+      alert('地图还没加载完');
+      return;
+    }
+
+    console.log('[Markers] 添加标记:', lng, lat);
 
     // WGS84 转 GCJ02
     const gcj = wgs84ToGcj02(lng, lat);
@@ -89,29 +80,37 @@
       position: Cesium.Cartesian3.fromDegrees(lng, lat, 0),
       billboard: {
         image: 'data:image/svg+xml;base64,' + btoa(`
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
-            <path d="M16 0 C7 0 0 7 0 16 C0 28 16 40 16 40 C16 40 32 28 32 16 C32 7 25 0 16 0 Z" fill="#ff4444"/>
-            <circle cx="16" cy="16" r="6" fill="white"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="45" viewBox="0 0 36 45">
+            <path d="M18 0 C8 0 0 8 0 18 C0 31 18 45 18 45 C18 45 36 31 36 18 C36 8 28 0 18 0 Z" fill="#ff4444" stroke="white" stroke-width="2"/>
+            <circle cx="18" cy="18" r="7" fill="white"/>
           </svg>
         `),
-        width: 32,
-        height: 40,
+        width: 36,
+        height: 45,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
       },
       label: {
         text: address,
-        font: '12px sans-serif',
+        font: '13px sans-serif',
         fillColor: Cesium.Color.WHITE,
-        backgroundColor: new Cesium.Color(0.1, 0.1, 0.2, 0.8),
+        backgroundColor: new Cesium.Color(0.1, 0.1, 0.2, 0.9),
         showBackground: true,
-        pixelOffset: new Cesium.Cartesian2(0, -45),
+        pixelOffset: new Cesium.Cartesian2(0, -50),
         horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        outlineWidth: 2,
+        outlineColor: Cesium.Color.BLACK,
       },
-      properties: { address: address, lng: lng, lat: lat },
+      properties: { 
+        address: address, 
+        lng: lng, 
+        lat: lat,
+        time: new Date().toLocaleString()
+      },
     });
 
     markers.push(marker);
-    console.log('[Markers] 添加标记:', address);
+    console.log('[Markers] 标记成功:', address);
   }
 
   // WGS84 转 GCJ02
@@ -153,18 +152,26 @@
       return;
     }
 
+    console.log('[Markers] 地图加载完成，绑定点击事件');
+
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction((click) => {
       if (!addMode) return;
 
+      console.log('[Markers] 地图点击:', click.position);
+
       const ray = viewer.camera.getPickRay(click.position);
       const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
-      if (!cartesian) return;
+      if (!cartesian) {
+        console.log('[Markers] 没点到地球');
+        return;
+      }
 
       const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
       const lng = Cesium.Math.toDegrees(cartographic.longitude);
       const lat = Cesium.Math.toDegrees(cartographic.latitude);
 
+      console.log('[Markers] 坐标:', lng, lat);
       addMarker(lng, lat);
       addMode = false;
       const btn = document.getElementById('add-marker-btn');
@@ -179,7 +186,15 @@
   // 初始化
   function init() {
     createUI();
-    setupClickHandler();
+    
+    // 等 viewer 加载
+    const checkViewer = setInterval(() => {
+      if (window.viewer && window.Cesium) {
+        clearInterval(checkViewer);
+        setupClickHandler();
+      }
+    }, 500);
+
     console.log('[Markers] 标记功能加载完成');
   }
 
