@@ -517,7 +517,7 @@
 
     if (allPoints.length < 2) return;
 
-    // 创建移动的点
+    // 创建移动的点（小车）
     if (navCar) {
       window.viewer.entities.remove(navCar);
     }
@@ -525,10 +525,15 @@
     navCar = window.viewer.entities.add({
       position: allPoints[0],
       point: {
-        pixelSize: 15,
-        color: Cesium.Color.RED,
-        outlineColor: Cesium.Color.WHITE,
-        outlineWidth: 3,
+        pixelSize: 1, // 隐藏默认点
+      },
+      label: {
+        text: '🚗',
+        font: '24px sans-serif',
+        scale: 1.5,
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        verticalOrigin: Cesium.VerticalOrigin.CENTER,
+        pixelOffset: new Cesium.Cartesian2(0, 0),
       },
     });
 
