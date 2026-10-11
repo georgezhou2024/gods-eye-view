@@ -1,12 +1,13 @@
-// 标记功能 + 搜索功能 + 快捷城市
+// 标记功能 + 搜索功能 + 路线导航
 
 (function() {
   console.log('[App] 功能加载中...');
 
   let markers = [];
   let addMode = false;
-  let searchResults = [];
   let highlightEntity = null;
+  let routeEntity = null;
+  let selectedMarker = null;
 
   function createUI() {
     // 搜索框
@@ -36,7 +37,6 @@
     `;
     searchBox.appendChild(input);
 
-    // 搜索结果下拉列表
     const resultsDiv = document.createElement('div');
     resultsDiv.id = 'search-results';
     resultsDiv.style.cssText = `
@@ -49,7 +49,6 @@
       overflow-y: auto;
     `;
     searchBox.appendChild(resultsDiv);
-
     document.body.appendChild(searchBox);
 
     // 输入时自动搜索
@@ -63,6 +62,16 @@
           resultsDiv.style.display = 'none';
         }
       }, 500);
+    });
+
+    // 回车直接飞第一个结果
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        if (lastSearchResults.length > 0) {
+          selectResult(lastSearchResults[0]);
+          resultsDiv.style.display = 'none';
+        }
+      }
     });
 
     // 快捷城市按钮
@@ -98,7 +107,6 @@
       btn.addEventListener('click', () => flyTo(city.lng, city.lat));
       cityBar.appendChild(btn);
     });
-
     document.body.appendChild(cityBar);
 
     // 添加标记按钮
@@ -160,9 +168,81 @@
       markers.forEach(m => viewer.entities.remove(m));
       markers = [];
     });
+
+    // 导航面板
+    const navPanel = document.createElement('div');
+    navPanel.id = 'nav-panel';
+    navPanel.style.cssText = `
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 999999;
+      background: #1a1a2e;
+      color: #fff;
+      border: 1px solid #00ff88;
+      border-radius: 10px;
+      padding: 20px;
+      width: 320px;
+      font-family: 'Inter', sans-serif;
+    `;
+    navPanel.innerHTML = `
+      <div style="font-size:16px; color:#00ff88; margin-bottom:15px;">🧭 路线导航</div>
+      <div style="margin-bottom:10px; color:#888; font-size:12px;">起点：<span id="nav-start" style="color:#fff;">当前标记</span></div>
+      <input id="nav-dest" type="text" placeholder="输入目的地，如：天安门" style="
+        width: 100%;
+        box-sizing: border-box;
+        background: #222;
+        color: #00ff88;
+        border: 1px solid #00ff88;
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 14px;
+        margin-bottom: 10px;
+        outline: none;
+      ">
+      <button id="nav-go" style="
+        width: 100%;
+        background: #00ff88;
+        color: #1a1a2e;
+        border: none;
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-bottom: 10px;
+      ">开始导航</button>
+      <div id="nav-result" style="font-size:13px; color:#888;"></div>
+      <button id="nav-close" style="
+        width: 100%;
+        background: #333;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px;
+        font-size: 12px;
+        cursor: pointer;
+      ">关闭</button>
+    `;
+    document.body.appendChild(navPanel);
+
+    // 导航事件
+    document.getElementById('nav-go').addEventListener('click', () => {
+      const dest = document.getElementById('nav-dest').value.trim();
+      if (dest && selectedMarker) {
+        startNavigation(selectedMarker, dest);
+      }
+    });
+
+    document.getElementById('nav-close').addEventListener('click', () => {
+      navPanel.style.display = 'none';
+    });
   }
 
-  // 搜索地名
+  let lastSearchResults = [];
+
   async function searchPlace(keyword) {
     try {
       const url = `/api/amap-search?keywords=${encodeURIComponent(keyword)}`;
@@ -170,14 +250,14 @@
       const data = await resp.json();
       
       if (data.status === '1' && data.pois && data.pois.length > 0) {
-        showSearchResults(data.pois.slice(0, 8));
+        lastSearchResults = data.pois.slice(0, 8);
+        showSearchResults(lastSearchResults);
       }
     } catch (e) {
       console.error('[Search] 搜索失败:', e);
     }
   }
 
-  // 显示搜索结果
   function showSearchResults(pois) {
     const resultsDiv = document.getElementById('search-results');
     if (!resultsDiv) return;
@@ -185,7 +265,7 @@
     resultsDiv.innerHTML = '';
     resultsDiv.style.display = 'block';
 
-    pois.forEach((poi, index) => {
+    pois.forEach((poi) => {
       const item = document.createElement('div');
       item.style.cssText = `
         padding: 10px 15px;
@@ -197,40 +277,31 @@
       item.innerHTML = `<div style="color:#00ff88; font-weight:bold;">${poi.name}</div>
                         <div style="color:#888; font-size:11px; margin-top:3px;">${poi.address || poi.pname}</div>`;
       
-      item.addEventListener('mouseenter', () => {
-        item.style.background = '#00ff8822';
-      });
-      item.addEventListener('mouseleave', () => {
-        item.style.background = 'transparent';
-      });
+      item.addEventListener('mouseenter', () => item.style.background = '#00ff8822');
+      item.addEventListener('mouseleave', () => item.style.background = 'transparent');
 
       item.addEventListener('click', () => {
         selectResult(poi);
         resultsDiv.style.display = 'none';
-        document.getElementById('search-box').querySelector('input').value = poi.name;
+        document.querySelector('#search-box input').value = poi.name;
       });
 
       resultsDiv.appendChild(item);
     });
   }
 
-  // 选择搜索结果
   function selectResult(poi) {
     if (!window.viewer) return;
 
     const location = poi.location.split(',');
     const lng = parseFloat(location[0]);
     const lat = parseFloat(location[1]);
-
-    // GCJ02 转 WGS84
     const wgs = gcj02ToWgs84(lng, lat);
 
-    // 移除之前的高亮
     if (highlightEntity) {
       window.viewer.entities.remove(highlightEntity);
     }
 
-    // 添加发光标记
     highlightEntity = window.viewer.entities.add({
       position: Cesium.Cartesian3.fromDegrees(wgs.lng, wgs.lat, 0),
       ellipse: {
@@ -253,11 +324,9 @@
       },
     });
 
-    // 飞过去
     flyTo(wgs.lng, wgs.lat);
   }
 
-  // 飞到指定位置
   function flyTo(lng, lat) {
     if (!window.viewer) return;
     window.viewer.camera.flyTo({
@@ -271,7 +340,87 @@
     });
   }
 
-  // 添加标记
+  // 开始导航
+  async function startNavigation(marker, destName) {
+    try {
+      // 获取起点坐标
+      const startPos = marker.position.getValue();
+      const startCart = Cesium.Cartographic.fromCartesian(startPos);
+      const startLng = Cesium.Math.toDegrees(startCart.longitude);
+      const startLat = Cesium.Math.toDegrees(startCart.latitude);
+      const startGcj = wgs84ToGcj02(startLng, startLat);
+
+      // 搜索目的地
+      const searchUrl = `/api/amap-search?keywords=${encodeURIComponent(destName)}`;
+      const searchResp = await fetch(searchUrl);
+      const searchData = await searchResp.json();
+
+      if (searchData.status !== '1' || !searchData.pois || searchData.pois.length === 0) {
+        document.getElementById('nav-result').innerHTML = '❌ 未找到目的地';
+        return;
+      }
+
+      const dest = searchData.pois[0];
+      const destLoc = dest.location.split(',');
+      const destLng = parseFloat(destLoc[0]);
+      const destLat = parseFloat(destLoc[1]);
+
+      // 调用路线规划 API
+      const routeUrl = `/api/amap-route?origin=${startGcj.lng},${startGcj.lat}&destination=${destLng},${destLat}`;
+      const routeResp = await fetch(routeUrl);
+      const routeData = await routeResp.json();
+
+      if (routeData.status === '1' && routeData.route && routeData.paths && routeData.route.paths.length > 0) {
+        const path = routeData.route.paths[0];
+        const distance = (path.distance / 1000).toFixed(1);
+        const duration = Math.round(path.duration / 60);
+
+        // 画路线
+        drawRoute(path.steps);
+
+        document.getElementById('nav-result').innerHTML = `
+          <div style="color:#00ff88; margin-top:10px;">✅ 路线规划完成</div>
+          <div style="margin-top:5px;">📍 目的地：${dest.name}</div>
+          <div style="margin-top:5px;">📏 距离：${distance} 公里</div>
+          <div style="margin-top:5px;">⏱️ 预计时间：${duration} 分钟</div>
+        `;
+      } else {
+        document.getElementById('nav-result').innerHTML = '❌ 路线规划失败: ' + (routeData.info || '未知错误');
+      }
+    } catch (e) {
+      console.error('[Nav] 导航失败:', e);
+      document.getElementById('nav-result').innerHTML = '❌ 导航失败: ' + e.message;
+    }
+  }
+
+  // 画路线
+  function drawRoute(steps) {
+    if (!window.viewer) return;
+
+    if (routeEntity) {
+      window.viewer.entities.remove(routeEntity);
+    }
+
+    const positions = [];
+    steps.forEach(step => {
+      const coords = step.polyline.split(';');
+      coords.forEach(coord => {
+        const [lng, lat] = coord.split(',').map(Number);
+        const wgs = gcj02ToWgs84(lng, lat);
+        positions.push(Cesium.Cartesian3.fromDegrees(wgs.lng, wgs.lat, 50));
+      });
+    });
+
+    routeEntity = window.viewer.entities.add({
+      polyline: {
+        positions: positions,
+        width: 5,
+        material: Cesium.Color.YELLOW,
+        clampToGround: true,
+      },
+    });
+  }
+
   async function addMarker(lng, lat) {
     const viewer = window.viewer;
     if (!viewer) return;
@@ -321,7 +470,6 @@
     }
   }
 
-  // 坐标转换
   function wgs84ToGcj02(lng, lat) {
     const a = 6378245.0;
     const ee = 0.00669342162296594323;
@@ -364,23 +512,14 @@
       return;
     }
 
+    // 点击地图添加标记
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     
     handler.setInputAction((click) => {
       if (!addMode) return;
 
       const cartesian = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
-      
-      if (!cartesian) {
-        const ray = viewer.camera.getPickRay(click.position);
-        const cartesian2 = viewer.scene.globe.pick(ray, viewer.scene);
-        if (cartesian2) {
-          const cartographic = Cesium.Cartographic.fromCartesian(cartesian2);
-          const lng = Cesium.Math.toDegrees(cartographic.longitude);
-          const lat = Cesium.Math.toDegrees(cartographic.latitude);
-          addMarker(lng, lat);
-        }
-      } else {
+      if (cartesian) {
         const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
         const lng = Cesium.Math.toDegrees(cartographic.longitude);
         const lat = Cesium.Math.toDegrees(cartographic.latitude);
@@ -393,6 +532,15 @@
         btn.innerHTML = '📍 添加标记';
         btn.style.background = '#1a1a2e';
         btn.style.color = '#00ff88';
+      }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+    // 点击标记弹出导航
+    handler.setInputAction((click) => {
+      const pickedObject = viewer.scene.pick(click.position);
+      if (Cesium.defined(pickedObject) && pickedObject.id.billboard) {
+        selectedMarker = pickedObject.id;
+        document.getElementById('nav-panel').style.display = 'block';
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
   }
