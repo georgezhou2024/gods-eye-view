@@ -540,8 +540,17 @@
         return;
       }
       navCar.position = allPoints[index];
-      index += 2; // 加速
-    }, 100);
+      index += 1; // 慢一点
+      
+      // 显示当前位置
+      const carto = Cesium.Cartographic.fromCartesian(allPoints[index]);
+      const lng = Cesium.Math.toDegrees(carto.longitude).toFixed(4);
+      const lat = Cesium.Math.toDegrees(carto.latitude).toFixed(4);
+      document.getElementById('nav-result').innerHTML = 
+        `<div style="color:#00ff88; margin-top:10px;">🚗 正在导航...</div>
+         <div style="margin-top:5px;">📍 当前位置：${lng}, ${lat}</div>
+         <div style="margin-top:5px; color:#666;">进度：${Math.round(index/allPoints.length*100)}%</div>`;
+    }, 1000); // 1秒走一步，慢10倍
   }
 
   // 画路线
