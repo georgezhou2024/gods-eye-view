@@ -134,6 +134,11 @@ export function createApplicationViewer({ container, creditContainer }) {
     viewer.scene.skyAtmosphere.atmosphereLightIntensity = 18;
     viewer.scene.skyAtmosphere.saturationShift = -0.12;
     viewer.scene.skyAtmosphere.brightnessShift = -0.08;
+    // 开启真实昼夜光照（跟随太阳位置自动明暗）
+    viewer.scene.globe.enableLighting = true;
+    viewer.scene.globe.lightingFadeOutDistance = 0;
+    viewer.scene.globe.lightingFadeInDistance = 0;
+    viewer.scene.light = new Cesium.SunLight(viewer.scene);
     return viewer;
   } catch (error) {
     viewer.destroy();
